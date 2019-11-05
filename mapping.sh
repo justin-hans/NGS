@@ -115,7 +115,7 @@ samtools view -@ 4 -S -b -h -f 3 HG02024_SRR822145.sam > HG02024_SRR822145.bam
 # Command: samtools sort
 # Input: compressed alignment (.bam)
 # Ouput: sorted and compressed alignment (.bam)
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx > HG02024_SRR822145.sorted.bam
+samtools sort HG02024_SRR822145.bam  > HG02024_SRR822145.sorted.bam
 
 # Add Read group (cf https://gatkforums.broadinstitute.org/gatk/discussion/6472/read-groups)
 # Command: gatk AddOrReplaceReadGroups
