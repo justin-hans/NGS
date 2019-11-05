@@ -29,7 +29,7 @@ java -jar ${PICARD}
 # Command: wget
 # Input: url (http:// or ftp://)
 # Ouput: compressed reference sequence (.fa.gz)
-wget xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -O Homo_sapiens.Chr20.fa.gz
+wget ftp://ftp.ensembl.org/pub/release-98/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.20.fa.gz -O Homo_sapiens.Chr20.fa.gz
 
 # Extract the reference chromosome
 # Command: gunzip
@@ -49,7 +49,7 @@ bwa index Homo_sapiens.Chr20.fa
 
 # The sequences are from an East Asian (Kinh Vietnamese) family forming a trio : daughter/mother/father
 # Data available at http://www.internationalgenome.org/data-portal/sample/HG02024
-# Daughter:
+# Daughter: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR822/SRR822145/SRR822145_1.fastq.gz	
 #       StudyId: SRP004063
 #       SampleName: HG02024
 #       Library: Pond-206419
@@ -58,7 +58,7 @@ bwa index Homo_sapiens.Chr20.fa
 #       PlatformUnit:  C19U4ACXX121217.7.tagged_373.bam
 #       InstrumentModel: Illumina HiSeq 2000
 #       InsertSize: 160
-# Mother:
+# Mother: ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR359/SRR359188/SRR359188_2.fastq.gz	
 #       StudyId: SRP004063
 #       SampleName: HG02025
 #       Library: Catch-88584
@@ -67,7 +67,7 @@ bwa index Homo_sapiens.Chr20.fa
 #       PlatformUnit: BI.PE.110902_SL-HBC_0182_AFCD046MACXX.7.tagged_851.srf
 #       InstrumentModel: Illumina HiSeq 2000
 #       InsertSize: 96
-# Father:
+# Father: https://www.internationalgenome.org/data-portal/sample/HG02026
 #       StudyId: SRP004063
 #       SampleName: HG02026
 
@@ -79,7 +79,7 @@ bwa index Homo_sapiens.Chr20.fa
 # Command: wget
 # Input: url (http:// or ftp://)
 # Ouput: compressed sequencing reads (.fastq.gz)
-wget xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -O HG02024_SRR822145_1.filt.fastq.gz
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR822/SRR822145/SRR822145_1.fastq.gz -O HG02024_SRR822145_1.filt.fastq.gz
 
 
 # Map the paired sequencing reads against the reference Human chromosome 20
@@ -88,7 +88,7 @@ wget xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -O HG02024_SRR822145_1.filt.fastq.gz
 #          -t [number of CPU] (multi-threading)
 # Input: indexed reference (.fa), and compressed sequencing reads (.fastq.gz)
 # Ouput: alignment (.sam)
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx > HG02024_SRR822145.sam
+bwa mem -M -t 4 Homo_sapiens.Chr20.fa HG02024_SRR822145_1.filt.fastq.gz HG02024_SRR822145_2.filt.fastq.gz  > HG02024_SRR822145.sam
 
 # (Optional)
 # Compute summary statistics of the alignment
@@ -109,7 +109,7 @@ samtools flagstat HG02024_SRR822145.sam > HG02024_SRR822145.sam.flagstats
 #	      https://broadinstitute.github.io/picard/explain-flags.html
 # Input: alignment (.sam)
 # Ouput: compressed alignment (.bam)
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx > HG02024_SRR822145.bam
+samtools view -@ 4 -S -b -h -f 3 HG02024_SRR822145.sam > HG02024_SRR822145.bam
 
 # Sort the alignment
 # Command: samtools sort
