@@ -133,12 +133,6 @@ java -jar ${PICARD} AddOrReplaceReadGroups I=HG02024_SRR822145.sorted.bam \
 # Ouput: text file (human and computer readable)
 samtools stats daughter.bam > daughter.bam.stats
 
-# (Optional)
-# Plot statistics of the alignment
-# Command: plot-bamstats
-# Input: statistics text file (output of samtools-stats)
-# Ouput: plots (.png)
-plot-bamstats -p ${WORK_DIR}/plots/ daughter.bam.stats
 
 # Index the alignment
 # Command: samtools index
@@ -147,31 +141,43 @@ plot-bamstats -p ${WORK_DIR}/plots/ daughter.bam.stats
 samtools index daughter.bam
 
 
+#####
+# On utilise le site IGV pour visualiser les séquences . bam (avec le fichier index .bai)
+#####
+
+
 ###########################
 ## Mapping of the mother ##
 ###########################
 
+
 # Variables definition
-FTP_SEQ_FOLDER=xxxxxxxxxxxxxxxxxxxxxxxxxx # Ftp folder from 1000Genomes project
+FTP_SEQ_FOLDER=ftp://ftp.sra.ebi.ac.uk/vol1/fastq	 # Ftp folder from 1000Genomes project
 RUN_ID=SRR359188 # Read group identifier
+RUN=SRR359 # Read group identifier
 SAMPLE_NAME=HG02025 # Sample
-INSTRUMENT_PLATFORM=xxxxxxxxxxxx # Platform/technology used to produce the read
-LIBRARY_NAME=xxxxxxxxxxxx # DNA preparation library identifier
-RUN_NAME=xxxxxxxxxxxx # Platform Unit
-INSERT_SIZE=xxxxxxxxxxxx # Insert size
+INSTRUMENT_PLATFORM=Illumina # Platform/technology used to produce the read
+LIBRARY_NAME=Catch-88584 # DNA preparation library identifier
+RUN_NAME="BI.PE.110902_SL-HBC_0182_AFCD046MACXX.7.tagged_851.srf" # Platform Unit
+INSERT_SIZE=96 # Insert size
 
 # Download paired sequencing reads for the mother
 # Command: wget
 # Input: url (http:// or ftp://)
 # Ouput: compressed sequencing reads (.fastq.gz)
-wget ${FTP_SEQ_FOLDER}/data/${SAMPLE_NAME}/sequence_read/${RUN_ID}_1.filt.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_1.filt.fastq.gz
-wget ${FTP_SEQ_FOLDER}/data/${SAMPLE_NAME}/sequence_read/${RUN_ID}_2.filt.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_2.filt.fastq.gz
+
+wget ${FTP_SEQ_FOLDER}/${RUN}/${RUN_ID}/${RUN_ID}_1.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_1.filt.fastq.gz
+wget ${FTP_SEQ_FOLDER}/${RUN}/${RUN_ID}/${RUN_ID}_2.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_2.filt.fastq.gz
+
+
+#wget ${FTP_SEQ_FOLDER}/data/${SAMPLE_NAME}/sequence_read/${RUN_ID}_1.filt.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_1.filt.fastq.gz
+#wget ${FTP_SEQ_FOLDER}/data/${SAMPLE_NAME}/sequence_read/${RUN_ID}_2.filt.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_2.filt.fastq.gz
 
 # Map, filter, and sort the paired sequencing reads of the mother against the reference genome
 # Command: bwa mem && samtools view && samtools sort
 # Input: indexed reference (.fa), and compressed sequencing reads (.fastq.gz)
 # Ouput: sorted alignment (.bam)
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx > ${SAMPLE_NAME}_${RUN_ID}.sorted.bam
+bwa mem -M -t 4 Homo_sapiens.Chr20.fa ${SAMPLE_NAME}_${RUN_ID}_1.filt.fastq.gz ${SAMPLE_NAME}_${RUN_ID}_2.filt.fastq.gz | samtools view -@ 4 -S -b -h -f 3 | samtools sort > ${SAMPLE_NAME}_${RUN_ID}.sorted.bam
 
 # Add Read group
 # Command: gatk AddOrReplaceReadGroups
@@ -185,7 +191,7 @@ java -jar ${PICARD} AddOrReplaceReadGroups I=${SAMPLE_NAME}_${RUN_ID}.sorted.bam
 # Command: samtools index
 # Input: alignment (.bam)
 # Ouput: indexed alignment (.bam.bai)
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+samtools index mother.bam
 
 ###########################
 ## Mapping of the father ##
