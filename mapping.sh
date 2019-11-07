@@ -199,30 +199,31 @@ samtools index mother.bam
 
 # Variables definition
 FTP_SEQ_FOLDER=ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/ # Ftp folder from 1000Genomes project
-SAMPLE_NAME=HG02026 # Sample
+SAMPLE_NAME=HG02024 # Sample
 
 # Download index file containing sequencing runs information
 # Command: wget
 # Input: url (http:// or ftp://)
 # Ouput: text file (.index)
-wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/20130502.phase3.sequence.index -O 20130502.phase3.index
+
+#####wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/20130502.phase3.sequence.index -O 20130502.phase3.index
 
 # Filter paired exome sequencing runs related to father (HG02026)
 # Command: grep && grep -v
 # Input: tab-separated values file (.index)
 # Ouput: filtered comma-separated values file (.index)
-grep ${SAMPLE_NAME} 20130502.phase3.index | grep "exome" | grep "Pond-" | grep 'PAIRED' | grep -v 'Solexa' | grep -v 'from blood' | grep -v '_1.filt.fastq.gz' | grep -v '_2.filt.fastq.gz' | sed 's/\t/,/g' > father.index
+grep ${SAMPLE_NAME} 20130502.phase3.index | grep "exome" | grep "Pond-" | grep 'PAIRED' | grep -v 'Solexa' | grep -v 'from blood' | grep -v '_1.filt.fastq.gz' | grep -v '_2.filt.fastq.gz' | sed 's/\t/,/g' > daughter.index
 
 # File containing the list of alignments (each line is a .bam file)
 # This file is necessary to merge multiple alignments into a single alignment.
 # Command: touch
 # Input: file name
 # Ouput: empty file (.bamlist)
-touch father.bamlist
+touch daughter.bamlist
 
-NUMBER_RUNS=2
+NUMBER_RUNS=8
 # for each sequencing run (the first 8), align to the reference, sort, add read group and index
-head -n ${NUMBER_RUNS} father.index | while IFS="," read FASTQ_FILE MD5 RUN_ID STUDY_ID STUDY_NAME CENTER_NAME SUBMISSION_ID SUBMISSION_DATE SAMPLE_ID SAMPLE_NAME POPULATION EXPERIMENT_ID INSTRUMENT_PLATFORM INSTRUMENT_MODEL LIBRARY_NAME RUN_NAME RUN_BLOCK_NAME INSERT_SIZE LIBRARY_LAYOUT PAIRED_FASTQ WITHDRAWN WITHDRAWN_DATE COMMENT READ_COUNT BASE_COUNT ANALYSIS_GROUP
+head -n ${NUMBER_RUNS} daughter.index | while IFS="," read FASTQ_FILE MD5 RUN_ID STUDY_ID STUDY_NAME CENTER_NAME SUBMISSION_ID SUBMISSION_DATE SAMPLE_ID SAMPLE_NAME POPULATION EXPERIMENT_ID INSTRUMENT_PLATFORM INSTRUMENT_MODEL LIBRARY_NAME RUN_NAME RUN_BLOCK_NAME INSERT_SIZE LIBRARY_LAYOUT PAIRED_FASTQ WITHDRAWN WITHDRAWN_DATE COMMENT READ_COUNT BASE_COUNT ANALYSIS_GROUP
 do
 
     # Variables definition
@@ -251,17 +252,17 @@ do
                                          RGPU=${RUN_NAME} RGSM=${SAMPLE_NAME} RGPI=${INSERT_SIZE}
 
     # Append the file name (.bam) to the list of alignments that will be merged
-    echo ${SAMPLE_NAME}_${RUN_ID}.sorted.RG.bam >> father.bamlist
+    echo ${SAMPLE_NAME}_${RUN_ID}.sorted.RG.bam >> daughter.bamlist
 done
 
 # Merge the list of alignments into a single file
 # Command: samtools merge
 # Input: file containing the list of alignments (each line is a .bam file)
 # Ouput: alignment (.bam)
-samtools merge -b father.bamlist father.bam
+samtools merge -b daughter.bamlist daughter.bam
 
 # Index the alignment
 # Command: samtools index
 # Input: alignment (.sam or .bam)
 # Ouput: indexed alignment (.sam.bai or .bam.bai)
-samtools index father.bam
+samtools index daughter.bam

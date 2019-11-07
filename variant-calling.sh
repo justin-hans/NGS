@@ -73,7 +73,7 @@ java -jar ${PICARD} CreateSequenceDictionary \
 #############################
 
 # Choose variable names
-FILE_NAME=HG02024
+FILE_NAME=daughter
 
 # Mark Duplicate reads
 # Command: MarkDuplicates (PICARDtools)
@@ -102,7 +102,8 @@ java -jar ${PICARD} BuildBamIndex \
 # Output: list of intervals (.list / .txt)
 #gatk RealignerTargetCreator \
 java -jar ${GATK} -T RealignerTargetCreator \
-	xxxxxxxxxxxxxxxxxxxxx
+	--known ${KNOWN_INDELS} \
+	-R ${REF_GENOME} \
 	-I ${FILE_NAME}.marked_dups.bam \
 	-o ${FILE_NAME}.target_intervals.list 
 
@@ -112,7 +113,9 @@ java -jar ${GATK} -T RealignerTargetCreator \
 # Output: realigned alignment (.bam)
 #gatk IndelRealigner \
 java -jar ${GATK} -T IndelRealigner \
-	xxxxxxxxxxxxxxxxxxxxx
+	-known ${KNOWN_INDELS} \
+	-R ${REF_GENOME} \
+	-targetIntervals ${FILE_NAME}.target_intervals.list \
 	-I ${FILE_NAME}.marked_dups.bam \
 	-o ${FILE_NAME}.realigned_reads.bam
 
@@ -168,4 +171,7 @@ java -jar ${GATK} -T HaplotypeCaller \
 # Command: gatk GenotypeGVCFs
 # Input : genomic variant calling files (.g.vcf) + reference genome (.fa)
 # Output: Variant calling file (.vcf)
-xxxxxxxxxxxxxxxxxxxxx
+java -jar ${GATK} -T GenotypeGVCFs \
+                  -R ${REF_GENOME} \
+                  --variant ${FILE_NAME}.g.vcf \
+                  -o ${FILE_NAME}.vcf  

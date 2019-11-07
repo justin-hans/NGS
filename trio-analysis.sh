@@ -23,14 +23,18 @@ REF_GENOME=Homo_sapiens.Chr20.fa
 PEDIGREE=20130606_g1k.ped
 
 # Pedigree
-wget xxxxxxxxxxxxxxxxxxxxxxxxxxxxx -O 20130606_g1k.ped
+wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130606_sample_info/20130606_g1k.ped -O 20130606_g1k.ped
 
 
 # Perform joint variant calling
 # Command: gatk GenotypeGVCFs
 # Input : list of genomic variant calling files (.g.vcf) + reference genome (.fa)
 # Output: Variant calling file (.vcf)
-xxxxxxxxxxxxxxxxxxxxxxxxxxx
+java -jar ${GATK} -T GenotypeGVCFs \
+  -R ${REF_GENOME} \
+  --variant daughter.g.vcf \
+  --variant father.g.vcf \
+  --variant mother.g.vcf \
 	-o trio.vcf
 
 
@@ -73,4 +77,7 @@ java -jar ${GATK} -T VariantEval \
 # Command: gatk GenotypeConcordance
 # Input: 2 variant callings files (.vcf) + reference genome (.fa)
 # Output: Report file (.txt)
-xxxxxxxxxxxxxxxxxxxx
+java -jar ${GATK} -T GenotypeConcordance \
+  -eval trio.phased.vcf \
+  -comp trio.vcf \
+	-R ${REF_GENOME} \
