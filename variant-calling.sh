@@ -73,7 +73,8 @@ java -jar ${PICARD} CreateSequenceDictionary \
 #############################
 
 # Choose variable names
-FILE_NAME=daughter
+for FILE_NAME in 'HG02024' 'HG02025' 'HG02026'
+do
 
 # Mark Duplicate reads
 # Command: MarkDuplicates (PICARDtools)
@@ -175,3 +176,5 @@ java -jar ${GATK} -T GenotypeGVCFs \
                   -R ${REF_GENOME} \
                   --variant ${FILE_NAME}.g.vcf \
                   -o ${FILE_NAME}.vcf  
+                  
+done

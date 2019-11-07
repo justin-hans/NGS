@@ -71,127 +71,7 @@ bwa index Homo_sapiens.Chr20.fa
 #       StudyId: SRP004063
 #       SampleName: HG02026
 
-#############################
-## Mapping of the daughter ##
-#############################
 
-# Download paired sequencing reads for the daughter (SampleName: HG02024, RunId: SRR822145)
-# Command: wget
-# Input: url (http:// or ftp://)
-# Ouput: compressed sequencing reads (.fastq.gz)
-wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR822/SRR822145/SRR822145_1.fastq.gz -O HG02024_SRR822145_1.filt.fastq.gz
-
-
-# Map the paired sequencing reads against the reference Human chromosome 20
-# Command: bwa mem
-# Options: -M (Mark shorter split hits as secondary for GATK compatibility)
-#          -t [number of CPU] (multi-threading)
-# Input: indexed reference (.fa), and compressed sequencing reads (.fastq.gz)
-# Ouput: alignment (.sam)
-bwa mem -M -t 4 Homo_sapiens.Chr20.fa HG02024_SRR822145_1.filt.fastq.gz HG02024_SRR822145_2.filt.fastq.gz  > HG02024_SRR822145.sam
-
-# (Optional)
-# Compute summary statistics of the alignment
-# Command: samtools flagstats
-# Input: alignment (.sam)
-# Ouput: text file (human and computer readable)
-samtools flagstat HG02024_SRR822145.sam > HG02024_SRR822145.sam.flagstats
-
-# Compress the alignment and filter unaligned reads
-# Command: samtools view
-# Options:
-#      -@ [number of CPU] (multi-threading)
-#	   -S (input format is auto-detected)
-# 	   -b (output BAM)
-#	   -h (include header in output)
-#      -f [flag] (include reads with all  of the FLAGs in INT present)
-# 	      flag=3 for read paired & read mapped in proper pair, see
-#	      https://broadinstitute.github.io/picard/explain-flags.html
-# Input: alignment (.sam)
-# Ouput: compressed alignment (.bam)
-samtools view -@ 4 -S -b -h -f 3 HG02024_SRR822145.sam > HG02024_SRR822145.bam
-
-# Sort the alignment
-# Command: samtools sort
-# Input: compressed alignment (.bam)
-# Ouput: sorted and compressed alignment (.bam)
-samtools sort HG02024_SRR822145.bam  > HG02024_SRR822145.sorted.bam
-
-# Add Read group (cf https://gatkforums.broadinstitute.org/gatk/discussion/6472/read-groups)
-# Command: gatk AddOrReplaceReadGroups
-# Input: alignment (.bam) and read group (Read group identifier, DNA preparation library identifier, Platform, Platform Unit, Sample)
-# Ouput: annotated alignment (.bam)
-java -jar ${PICARD} AddOrReplaceReadGroups I=HG02024_SRR822145.sorted.bam \
-                                         O=daughter.bam \
-                                         RGID=SRR822145 RGLB=Pond-206419 RGPL=ILLUMINA \
-                                         RGPU=C19U4ACXX121217.7.tagged_373.bam RGSM=HG02024 RGPI=160
-
-# (Optional)
-# Compute statistics of the alignment
-# Command: samtools-stats
-# Input: alignment (.bam)
-# Ouput: text file (human and computer readable)
-samtools stats daughter.bam > daughter.bam.stats
-
-
-# Index the alignment
-# Command: samtools index
-# Input: alignment (.bam)
-# Ouput: indexed alignment (.bam.bai)
-samtools index daughter.bam
-
-
-#####
-# On utilise le site IGV pour visualiser les séquences . bam (avec le fichier index .bai)
-#####
-
-
-###########################
-## Mapping of the mother ##
-###########################
-
-
-# Variables definition
-FTP_SEQ_FOLDER=ftp://ftp.sra.ebi.ac.uk/vol1/fastq	 # Ftp folder from 1000Genomes project
-RUN_ID=SRR359188 # Read group identifier
-RUN=SRR359 # Read group identifier
-SAMPLE_NAME=HG02025 # Sample
-INSTRUMENT_PLATFORM=Illumina # Platform/technology used to produce the read
-LIBRARY_NAME=Catch-88584 # DNA preparation library identifier
-RUN_NAME="BI.PE.110902_SL-HBC_0182_AFCD046MACXX.7.tagged_851.srf" # Platform Unit
-INSERT_SIZE=96 # Insert size
-
-# Download paired sequencing reads for the mother
-# Command: wget
-# Input: url (http:// or ftp://)
-# Ouput: compressed sequencing reads (.fastq.gz)
-
-wget ${FTP_SEQ_FOLDER}/${RUN}/${RUN_ID}/${RUN_ID}_1.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_1.filt.fastq.gz
-wget ${FTP_SEQ_FOLDER}/${RUN}/${RUN_ID}/${RUN_ID}_2.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_2.filt.fastq.gz
-
-
-#wget ${FTP_SEQ_FOLDER}/data/${SAMPLE_NAME}/sequence_read/${RUN_ID}_1.filt.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_1.filt.fastq.gz
-#wget ${FTP_SEQ_FOLDER}/data/${SAMPLE_NAME}/sequence_read/${RUN_ID}_2.filt.fastq.gz -O ${SAMPLE_NAME}_${RUN_ID}_2.filt.fastq.gz
-
-# Map, filter, and sort the paired sequencing reads of the mother against the reference genome
-# Command: bwa mem && samtools view && samtools sort
-# Input: indexed reference (.fa), and compressed sequencing reads (.fastq.gz)
-# Ouput: sorted alignment (.bam)
-bwa mem -M -t 4 Homo_sapiens.Chr20.fa ${SAMPLE_NAME}_${RUN_ID}_1.filt.fastq.gz ${SAMPLE_NAME}_${RUN_ID}_2.filt.fastq.gz | samtools view -@ 4 -S -b -h -f 3 | samtools sort > ${SAMPLE_NAME}_${RUN_ID}.sorted.bam
-
-# Add Read group
-# Command: gatk AddOrReplaceReadGroups
-# Input: alignment (.bam) and read group
-# Ouput: alignment (.bam)
-java -jar ${PICARD} AddOrReplaceReadGroups I=${SAMPLE_NAME}_${RUN_ID}.sorted.bam O=mother.bam \
-                                         RGID=${RUN_ID} RGLB=${LIBRARY_NAME} RGPL=${INSTRUMENT_PLATFORM} \
-                                         RGPU=${RUN_NAME} RGSM=${SAMPLE_NAME} RGPI=${INSERT_SIZE}
-
-# Index the alignment
-# Command: samtools index
-# Input: alignment (.bam)
-# Ouput: indexed alignment (.bam.bai)
-samtools index mother.bam
 
 ###########################
 ## Mapping of the father ##
@@ -199,31 +79,26 @@ samtools index mother.bam
 
 # Variables definition
 FTP_SEQ_FOLDER=ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/ # Ftp folder from 1000Genomes project
-SAMPLE_NAME=HG02024 # Sample
 
 # Download index file containing sequencing runs information
 # Command: wget
 # Input: url (http:// or ftp://)
 # Ouput: text file (.index)
 
-#####wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/20130502.phase3.sequence.index -O 20130502.phase3.index
+wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/20130502.phase3.sequence.index -O 20130502.phase3.index
+
+for INDIVIDUAL in 'HG02024' 'HG02025' 'HG02026'
+do 
 
 # Filter paired exome sequencing runs related to father (HG02026)
 # Command: grep && grep -v
 # Input: tab-separated values file (.index)
 # Ouput: filtered comma-separated values file (.index)
-grep ${SAMPLE_NAME} 20130502.phase3.index | grep "exome" | grep "Pond-" | grep 'PAIRED' | grep -v 'Solexa' | grep -v 'from blood' | grep -v '_1.filt.fastq.gz' | grep -v '_2.filt.fastq.gz' | sed 's/\t/,/g' > daughter.index
-
-# File containing the list of alignments (each line is a .bam file)
-# This file is necessary to merge multiple alignments into a single alignment.
-# Command: touch
-# Input: file name
-# Ouput: empty file (.bamlist)
-touch daughter.bamlist
+grep ${INDIVIDUAL} 20130502.phase3.index | grep "exome" | grep "Pond-" | grep 'PAIRED' | grep -v 'Solexa' | grep -v 'from blood' | grep -v '_1.filt.fastq.gz' | grep -v '_2.filt.fastq.gz' | sed 's/\t/,/g' > ${INDIVIDUAL}.index
 
 NUMBER_RUNS=8
 # for each sequencing run (the first 8), align to the reference, sort, add read group and index
-head -n ${NUMBER_RUNS} daughter.index | while IFS="," read FASTQ_FILE MD5 RUN_ID STUDY_ID STUDY_NAME CENTER_NAME SUBMISSION_ID SUBMISSION_DATE SAMPLE_ID SAMPLE_NAME POPULATION EXPERIMENT_ID INSTRUMENT_PLATFORM INSTRUMENT_MODEL LIBRARY_NAME RUN_NAME RUN_BLOCK_NAME INSERT_SIZE LIBRARY_LAYOUT PAIRED_FASTQ WITHDRAWN WITHDRAWN_DATE COMMENT READ_COUNT BASE_COUNT ANALYSIS_GROUP
+head -n ${NUMBER_RUNS} ${SAMPLE_NAME}.index | while IFS="," read FASTQ_FILE MD5 RUN_ID STUDY_ID STUDY_NAME CENTER_NAME SUBMISSION_ID SUBMISSION_DATE SAMPLE_ID SAMPLE_NAME POPULATION EXPERIMENT_ID INSTRUMENT_PLATFORM INSTRUMENT_MODEL LIBRARY_NAME RUN_NAME RUN_BLOCK_NAME INSERT_SIZE LIBRARY_LAYOUT PAIRED_FASTQ WITHDRAWN WITHDRAWN_DATE COMMENT READ_COUNT BASE_COUNT ANALYSIS_GROUP
 do
 
     # Variables definition
@@ -250,19 +125,25 @@ do
     java -jar ${PICARD} AddOrReplaceReadGroups I=${SAMPLE_NAME}_${RUN_ID}.sorted.bam O=${SAMPLE_NAME}_${RUN_ID}.sorted.RG.bam \
                                          RGID=${RUN_ID} RGLB=${LIBRARY_NAME} RGPL=${INSTRUMENT_PLATFORM} \
                                          RGPU=${RUN_NAME} RGSM=${SAMPLE_NAME} RGPI=${INSERT_SIZE}
-
-    # Append the file name (.bam) to the list of alignments that will be merged
-    echo ${SAMPLE_NAME}_${RUN_ID}.sorted.RG.bam >> daughter.bamlist
 done
+
+# File containing the list of alignments (each line is a .bam file)
+# This file is necessary to merge multiple alignments into a single alignment.
+# Command: touch
+# Input: file name
+# Ouput: empty file (.bamlist)
+ls ${SAMPLE_NAME}*.sorted.RG.bam > ${INDIVIDUAL}.bamlist
 
 # Merge the list of alignments into a single file
 # Command: samtools merge
 # Input: file containing the list of alignments (each line is a .bam file)
 # Ouput: alignment (.bam)
-samtools merge -b daughter.bamlist daughter.bam
+samtools merge -b ${INDIVIDUAL}.bamlist ${INDIVIDUAL}.bam
 
 # Index the alignment
 # Command: samtools index
 # Input: alignment (.sam or .bam)
 # Ouput: indexed alignment (.sam.bai or .bam.bai)
-samtools index daughter.bam
+samtools index ${INDIVIDUAL}.bam
+
+done
